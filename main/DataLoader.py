@@ -268,3 +268,29 @@ class DataLoader:
                     cur_emotion = DataHolder.emotion_to_russian[DataHolder.names[cur_index]]
                     res.append((idx_start, idx_end, cur_emotion))
         return res
+    
+    def draw_eeg(self, file_to_meta, file_to_data, record_name):
+        record_meta = file_to_meta[record_name]
+        record_data = file_to_data[record_name]
+
+        for idx in range(len(record_meta)):
+            start, end, emotion = record_meta[idx]
+            times = np.zeros(end-start)
+            time_start = record_data[start][1]
+            matrix = np.zeros((9, end-start))
+
+            for i in range(start, end):
+                _, time, _, values = record_data[i]
+                for j, value in enumerate(values):
+                    times[i-start] = time - time_start
+                    matrix[j][i-start] = value
+
+            fig = go.Figure()
+            for component in range(matrix.shape[0]):
+                func = matrix[component]
+                trace = go.Scatter(x=times, y=func, mode='lines', name=f'Сигнал {component+1}')
+                fig.add_trace(trace)
+            fig.update_layout(title=f'График ЭЭГ области Вернике, эмоция: {emotion}',
+                            xaxis_title='Время, сек.',
+                            yaxis_title='Значение ЭЭГ сигнала')
+            fig.show()
