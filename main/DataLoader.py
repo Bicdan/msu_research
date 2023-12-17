@@ -50,6 +50,21 @@ class DataHolder:
         11: 'застенчивость'
     }
 
+    russian_to_index = {
+        'гнев': 0,
+        'горе': 1,
+        'любовь': 2,
+        'нейтрально': 3,
+        'отвращение': 4,
+        'презрение': 5,
+        'радость': 6,
+        'тревога': 7,
+        'удивление': 8,
+        'ужас': 9,
+        'вина': 10,
+        'застенчивость': 11
+    }
+
     # Для того, чтобы убрать отрезки с простоем
     index_to_range = {
         0: [(10, 160), (225, 350)],
@@ -294,3 +309,24 @@ class DataLoader:
                             xaxis_title='Время, сек.',
                             yaxis_title='Значение ЭЭГ сигнала')
             fig.show()
+
+    def get_single_eeg(self, file_to_meta, file_to_data,
+                       record_name, record_index, signal_index):
+        """
+        Возвращает массив со значениями record_index'ной записи и
+            signal_index'ного сигнала, а также массив с метками времени
+        """
+        record_meta = file_to_meta[record_name][record_index]
+        record_data = file_to_data[record_name]
+
+        start, end, _ = record_meta
+        times = np.zeros(end-start)
+        time_start = record_data[start][1]
+        signal_values = np.zeros(end-start)
+
+        for i in range(start, end):
+            _, time, _, values = record_data[i]
+            times[i-start] = time - time_start
+            signal_values[i] = values[signal_index]
+        
+        return signal_values, times
